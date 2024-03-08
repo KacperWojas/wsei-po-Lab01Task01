@@ -110,7 +110,6 @@ test.AddCase(
         () =>
         {
             var constructorInfo = wType.GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, Type.EmptyTypes);
-            Console.WriteLine(constructorInfo);
             return constructorInfo is not null && constructorInfo.IsPrivate;
         }, 1));
 // Zadanie 4
