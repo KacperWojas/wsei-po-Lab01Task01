@@ -2,7 +2,7 @@
 
 using System.Reflection;
 using Lab01Task01;
-using Lab01Task01.Solution;
+//using Lab01Task01.Solution;
 using Weight = Lab01Task01.Weight;
 using WeightUnits = Lab01Task01.WeightUnits;
 
