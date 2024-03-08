@@ -13,56 +13,54 @@ public enum WeightUnits
     OZ = (int)28.3495
 }
 
-public class Weight : IEquatable<Weight>, IComparable
+public class Weight : IEquatable<Weight>, IComparable<Weight>
 {
-    double Value{ get; init; }
-    WeightUnits Unit{ get; init; }
+    public double Value{ get; init; }
+    public WeightUnits Unit{ get; init; }
+    private double UnitValue{ 
+        get
+        {
+            switch(Unit){
+            case WeightUnits.G:
+                return 1;
+            case WeightUnits.DAG:
+                return 10;
+            case WeightUnits.KG:
+                return 1_000;
+            case WeightUnits.T:
+                return 1_000_000;
+            case WeightUnits.LB:
+                return 453.59237;
+            case WeightUnits.OZ:
+                return 28.3495;
+            default:
+                throw new ArgumentException("Nieznana jednostka masy!");
+        }
+        } 
+    }
     private Weight(){
 
     }
     public static Weight Of(double value, WeightUnits unit){
-        //if(value<0) throw new ArgumentException("Ujemna wartość masy!");
+        if(value<0) throw new ArgumentException("Ujemna wartość masy!");
         return new Weight(){Value = value, Unit = unit};
     }
     public static Weight Parse(string s){
         string[]? splitString = s.Split(" ");
         if(!double.TryParse(splitString[0], out double value)){
-            //throw new ArgumentException("Niepoprawny format liczby określającej masę!");
+            throw new ArgumentException("Niepoprawny format liczby określającej masę!");
         }
         if(value<0){
-            //throw new ArgumentException("Ujemna wartość masy!");
+            throw new ArgumentException("Ujemna wartość masy!");
         }
         WeightUnits unit;
-        switch(splitString[1]){
-            case "g":
-                unit=WeightUnits.G;
-                break;
-            case "dag":
-                unit=WeightUnits.DAG;
-                break;
-            case "kg":
-                unit=WeightUnits.KG;
-                break;
-            case "t":
-                unit=WeightUnits.T;
-                break;
-            case "lb":
-                unit=WeightUnits.LB;
-                break;
-            case "oz":
-                unit=WeightUnits.OZ;
-                break;
-            default:
-                //throw new ArgumentException("Nieznana jednostka masy!");
-                unit=WeightUnits.G;
-                break;
-        }
+        WeightUnits.TryParse(splitString[1].ToUpper(),out unit);
         return Weight.Of(value, unit);
     }
     private double ToGram(){
-        return Value*(double)Unit;
+        return Math.Round((double)Value*UnitValue,6);
     }
-    public bool Equals(Weight? other)
+/*    public bool Equals(Weight? other)
     {
         if(other is null) return false;
         return this.ToGram()==other.ToGram();
@@ -72,20 +70,27 @@ public class Weight : IEquatable<Weight>, IComparable
         if(other is null) return false;
         if(other is not Weight) return false;
         return this==(Weight)other;
-    }
+    }*/
     public static int Compare(Weight a, Weight b)
     {
-        if(a.ToGram()>b.ToGram()) return 1;
-        if(a.ToGram()<b.ToGram()) return -1;
+        if(Math.Round(a.ToGram(),2)>Math.Round(b.ToGram(),2)) return 1;
+        if(Math.Round(a.ToGram(),2)<Math.Round(b.ToGram(),2)) return -1;
         return 0;
     }
+        public int CompareTo(Weight? other)
+    {
+        return Compare(this, other);
+    }
+
     public int CompareTo(object? other)
     {
-        return Compare(this, (Weight)other);
+        if(other is not Weight) throw new ArgumentException("");
+        if(other is null) throw new ArgumentException("");
+        return CompareTo((Weight)other);
     }
     public static bool operator ==(Weight a, Weight b){
         if(a is null || b is null) return false;
-        return a.Equals(b);
+        return a.CompareTo(b)==0;
     }
     public static bool operator !=(Weight a, Weight b){
         return !(a.ToGram()==b.ToGram());
@@ -99,14 +104,19 @@ public class Weight : IEquatable<Weight>, IComparable
         return false;
     }
     public override string ToString(){
-        return this.Value.ToString() + " " + this.Unit.ToString().ToLower();
+        return this.Value.ToString() + " " + this.Unit.ToString().ToLower()+" "+ToGram();
     }
     public static Weight operator +(Weight a, Weight b){
         if(a.Unit>b.Unit)
-            return Weight.Of((a.ToGram()+b.ToGram())/(double)a.Unit,a.Unit);
-        return Weight.Of((a.ToGram()+b.ToGram())/(double)b.Unit,b.Unit);
+            return Weight.Of((a.ToGram()+b.ToGram())/(double)a.UnitValue,a.Unit);
+        return Weight.Of((a.ToGram()+b.ToGram())/(double)b.UnitValue,b.Unit);
     }
     public Weight ToUnit(WeightUnits unit){
-        return Weight.Of(this.ToGram()/(double)this.Unit,this.Unit);
+        return Weight.Of(this.ToGram()/(double)this.UnitValue,this.Unit);
+    }
+
+    public bool Equals(Weight? other)
+    {
+        return ToGram()== other.ToGram();
     }
 }
